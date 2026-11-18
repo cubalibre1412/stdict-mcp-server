@@ -139,6 +139,6 @@ export default {
     const pathToken = env.MCP_PATH_TOKEN?.trim();
     if (!pathToken) return new Response('MCP_PATH_TOKEN Secret is not configured', { status: 503 });
     if (url.pathname !== '/mcp/' + pathToken) return new Response('Not found', { status: 404 });
-    return createMcpHandler(() => createServer(env))(request, env, ctx);
+    return createMcpHandler(() => createServer(env), { route: url.pathname })(request, env, ctx);
   },
 };
