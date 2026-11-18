@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import { createMcpHandler } from 'agents/mcp/server';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 const API_BASE = 'https://stdict.korean.go.kr/api';
 
@@ -139,6 +139,14 @@ export default {
     const pathToken = env.MCP_PATH_TOKEN?.trim();
     if (!pathToken) return new Response('MCP_PATH_TOKEN Secret is not configured', { status: 503 });
     if (url.pathname !== '/mcp/' + pathToken) return new Response('Not found', { status: 404 });
-    return createMcpHandler(() => createServer(env), { route: url.pathname })(request, env, ctx);
+    return createMcpHandler(() => createServer(env), {
+      route: url.pathname,
+      onerror(error) {
+        const message = String(error?.message ?? error)
+          .split(pathToken).join('[REDACTED]')
+          .split(env.KOREAN_DICT_API_KEY || '\\0').join('[REDACTED]');
+        console.error('MCP handler error:', message);
+      },
+    })(request, env, ctx);
   },
 };
