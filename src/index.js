@@ -6,7 +6,7 @@ const API_KEY = process.env.KOREAN_DICT_API_KEY?.trim();
 const API_BASE = 'https://stdict.korean.go.kr/api';
 
 function requireApiKey() {
-  if (!API_KEY) throw new Error('KOREAN_DICT_API_KEY ȯ�溯���� �����ϴ�. ǥ�ر������� Open API Ű�� ������ �ּ���.');
+  if (!API_KEY) throw new Error('KOREAN_DICT_API_KEY 환경변수가 없습니다. 표준국어대사전 Open API 키를 설정해 주세요.');
   return API_KEY;
 }
 
@@ -26,12 +26,12 @@ async function callDictionary(endpoint, params) {
     if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, String(value));
   }
   const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
-  if (!response.ok) throw new Error(`ǥ�ر������� API HTTP ����: ${response.status}`);
+  if (!response.ok) throw new Error(`표준국어대사전 API HTTP 오류: ${response.status}`);
   const payload = await response.json();
   if (payload?.error) {
     const code = valueText(payload.error.error_code ?? payload.error.errorCode);
-    const message = valueText(payload.error.message) || '�� �� ���� API ����';
-    throw new Error(`ǥ�ر������� API ����${code ? ` ${code}` : ''}: ${message}`);
+    const message = valueText(payload.error.message) || '알 수 없는 API 오류';
+    throw new Error(`표준국어대사전 API 오류${code ? ` ${code}` : ''}: ${message}`);
   }
   return payload?.channel ?? payload;
 }
@@ -89,12 +89,12 @@ function normalizeDetailedEntry(channel) {
 
 const server = new McpServer({ name: 'stdict-mcp-server', version: '0.1.0' });
 
-server.tool('search_dictionary', '��������� ǥ�ر����������� ǥ����� ��Ǯ�̸� �˻��մϴ�.', {
-  query: z.string().min(1).max(100).describe('�˻���'),
-  method: z.enum(['exact', 'include', 'start', 'end', 'wildcard']).default('exact').describe('�˻� ���'),
-  count: z.number().int().min(10).max(100).default(10).describe('��� ����'),
-  start: z.number().int().min(1).max(1000).default(1).describe('�˻� ���� ��ȣ'),
-  partOfSpeech: z.array(z.number().int().min(0).max(15)).optional().describe('ǰ�� �ڵ� ���. 0�� ��ü, 1 ����, 5 ����, 6 �����'),
+server.tool('search_dictionary', '국립국어원 표준국어대사전에서 표제어와 뜻풀이를 검색합니다.', {
+  query: z.string().min(1).max(100).describe('검색어'),
+  method: z.enum(['exact', 'include', 'start', 'end', 'wildcard']).default('exact').describe('검색 방식'),
+  count: z.number().int().min(10).max(100).default(10).describe('결과 개수'),
+  start: z.number().int().min(1).max(1000).default(1).describe('검색 시작 번호'),
+  partOfSpeech: z.array(z.number().int().min(0).max(15)).optional().describe('품사 코드 목록. 0은 전체, 1 명사, 5 동사, 6 형용사'),
 }, async ({ query, method, count, start, partOfSpeech }) => {
   const channel = await callDictionary('search.do', {
     q: query, method, num: count, start,
@@ -103,20 +103,20 @@ server.tool('search_dictionary', '��������� ǥ�ر����
   const entries = asList(channel?.item).map(normalizeSearchItem);
   return { content: [{ type: 'text', text: JSON.stringify({
     query, total: Number(channel?.total ?? 0), start: Number(channel?.start ?? start),
-    count: entries.length, entries, source: '��������� ǥ�ر������� Open API',
+    count: entries.length, entries, source: '국립국어원 표준국어대사전 Open API',
   }, null, 2) }] };
 });
 
-server.tool('get_dictionary_entry', 'ǥ��� �˻� ����� targetCode�� �� ��Ǯ��, ǰ��, ��ʸ� ��ȸ�մϴ�.', {
-  query: z.string().min(1).max(100).describe('ǥ��� �˻� ����� targetCode'),
-  lookupBy: z.enum(['word', 'target_code']).default('word').describe('ǥ���� �Ǵ� targetCode�� ��ȸ'),
+server.tool('get_dictionary_entry', '표제어나 검색 결과의 targetCode로 상세 뜻풀이, 품사, 용례를 조회합니다.', {
+  query: z.string().min(1).max(100).describe('표제어나 검색 결과의 targetCode'),
+  lookupBy: z.enum(['word', 'target_code']).default('word').describe('표제어 또는 targetCode로 조회'),
 }, async ({ query, lookupBy }) => {
   const channel = await callDictionary('view.do', {
     method: lookupBy === 'target_code' ? 'target_code' : 'word_info', q: query,
   });
   const entries = normalizeDetailedEntry(channel);
   return { content: [{ type: 'text', text: JSON.stringify({
-    query, count: entries.length, entries, source: '��������� ǥ�ر������� Open API',
+    query, count: entries.length, entries, source: '국립국어원 표준국어대사전 Open API',
   }, null, 2) }] };
 });
 
