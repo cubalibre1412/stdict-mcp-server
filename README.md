@@ -48,7 +48,7 @@ ChatGPT의 맞춤 MCP 기능은 계정 및 요금제, 워크스페이스 설정�
 ### 보안과 사용량
 
 - API 키는 각자의 Cloudflare Worker Secret에 저장되며 코드나 GitHub 저장소에 포함되지 않습니다.
-- 배포 주소를 아는 사람은 그 Worker에 요청할 수 있습니다. 주소를 공개적으로 공유하지 마세요. 다른 사람이 호출하면 본인의 사전 API 사용량이 소진될 수 있습니다.
+- MCP 주소에는 `MCP_PATH_TOKEN`이 포함되므로, 주소를 아는 사람은 Worker에 요청할 수 있습니다. 주소를 공개적으로 공유하지 마세요. 다른 사람이 호출하면 본인의 사전 API 사용량이 소진될 수 있습니다.
 - 이 공개 저장소는 소스 코드만 제공합니다. 다른 사용자는 본인 API 키로 별도의 Worker를 배포해야 합니다.
 - Cloudflare Workers 무료 요금제의 한도 및 조건은 바뀔 수 있습니다. 최신 내용은 [Workers 요금제 한도](https://developers.cloudflare.com/workers/platform/limits/)를 확인하세요.
 
