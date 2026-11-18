@@ -1,13 +1,21 @@
 {
   "name": "stdict-mcp-server",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": false,
   "description": "MCP server for the National Institute of Korean Language Standard Korean Dictionary Open API",
   "type": "module",
   "engines": { "node": ">=18" },
-  "scripts": { "start": "node src/index.js" },
+  "scripts": {
+    "start": "node src/index.js",
+    "deploy:cloudflare": "wrangler deploy"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
+    "@modelcontextprotocol/server": "2.3.1",
+    "agents": "^0.33.0",
     "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "wrangler": "^4.164.0"
   }
 }
