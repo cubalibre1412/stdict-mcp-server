@@ -132,7 +132,7 @@ export default {
   fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.pathname === '/' && request.method === 'GET') {
-      return new Response('표준국어대사전 MCP 서버가 실행 중입니다. MCP endpoint: /mcp', {
+      return new Response('표준국어대사전 MCP 서버가 실행 중입니다. MCP endpoint: /mcp/<MCP_PATH_TOKEN>', {
         headers: { 'content-type': 'text/plain; charset=utf-8' },
       });
     }
