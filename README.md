@@ -21,7 +21,8 @@
 2. [국립국어원 표준국어대사전 Open API](https://stdict.korean.go.kr/openapi/openApiInfo.do)에서 본인 API 인증 키를 발급받습니다.
 3. GitHub에서 이 저장소를 Fork하거나 ZIP 파일로 내려받고 압축을 풉니다.
 4. 컴퓨터에 Node.js 18 이상을 설치한 뒤, PowerShell 또는 터미널에서 저장소 폴더로 이동합니다.
-5. 아래 명령을 순서대로 실행합니다.
+5. `wrangler.jsonc` 파일의 `name` 값을 Cloudflare에서 사용할 Worker 이름과 같게 바꿉니다. 현재 공개 저장소 값은 예시용입니다. 예를 들어 이름을 `stdict-mcp-server`로 정했다면 `wrangler.jsonc`에도 같은 값을 적습니다. 두 이름이 다르면 Cloudflare 자동 배포가 실패합니다.
+6. 아래 명령을 순서대로 실행합니다.
 
 \`\`\`bash
 npm install
