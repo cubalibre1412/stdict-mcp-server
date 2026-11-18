@@ -84,7 +84,7 @@ function normalizeDetailedEntry(channel) {
 }
 
 function createServer(env) {
-  const server = new McpServer({ name: 'stdict-mcp-server', version: '0.2.1' });
+  const server = new McpServer({ name: 'stdict-mcp-server', version: '0.2.2' });
 
   server.registerTool('search_dictionary', {
     description: '국립국어원 표준국어대사전에서 표제어와 뜻풀이를 검색합니다.',
