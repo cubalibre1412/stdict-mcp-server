@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "stdict-mcp-hamse-2026",
   "main": "src/worker.js",
-  "compatibility_date": "2026-11-19",
+  "compatibility_date": "2026-11-18",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true
 }
