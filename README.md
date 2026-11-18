@@ -27,6 +27,7 @@
 npm install
 npx wrangler login
 npx wrangler secret put KOREAN_DICT_API_KEY
+npx wrangler secret put MCP_PATH_TOKEN
 npm run deploy:cloudflare
 \`\`\`
 
