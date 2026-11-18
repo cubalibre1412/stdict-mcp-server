@@ -41,10 +41,51 @@ npm run deploy:cloudflare
 1. ChatGPT 웹에서 **플러그인(Plugins)** 메뉴를 엽니다.
 2. **+ → 맞춤 MCP 서버 추가(Add custom MCP server)**를 선택합니다.
 3. 서버 주소에 본인의 Cloudflare MCP 주소(`https://...workers.dev/mcp/생성한토큰`)를 입력합니다.
-4. 이 서버는 사전 검색·조회만 제공하므로 인증 방식은 **인증 없음(No authentication)**으로 선택합니다.
+4. 이 구현은 OAuth나 별도 인증 헤더 대신 URL의 비밀 토큰으로 접근을 제한하므로, ChatGPT의 인증 방식은 **인증 없음(No authentication)**으로 선택합니다. 조회 전용이라는 이유로 인증이 불필요한 것은 아닙니다.
 5. 연결을 만들고 도구 목록에 `search_dictionary`, `get_dictionary_entry`가 표시되는지 확인합니다.
 
 ChatGPT의 맞춤 MCP 기능은 계정 및 요금제, 워크스페이스 설정에 따라 달라질 수 있습니다. OpenAI 안내 기준으로 맞춤 MCP 연결은 웹에서 제공되며 모바일에서는 연결할 수 없습니다. 최신 지원 여부는 [OpenAI 안내](https://help.openai.com/en/articles/12584461-connecting-custom-mcp-servers-in-chatgpt)를 확인하세요.
+
+
+## 연결 오류 해결 및 검증 기록
+
+2026-11-19 Cloudflare 배포 후 MCP 초기화와 도구 목록 응답을 직접 확인했고, ChatGPT에서 플러그인 등록 성공을 확인했습니다. 아래 수정은 현재 `main` 코드에 반영되어 있습니다. 이 기록은 연결·등록 검증이며, 사전 API의 모든 검색 조건과 상세 조회 결과를 검증했다는 뜻은 아닙니다.
+
+### 실제 발생했던 오류
+
+| 증상 | 확인한 원인 / 판단 | 반영한 해결 방법 |
+| --- | --- | --- |
+| “MCP 엔드포인트를 찾지 못했습니다” | Worker는 토큰 경로를 허용하지만 MCP 핸들러의 기본 경로는 `/mcp`여서 경로가 불일치했습니다. | `createMcpHandler`에 `route: url.pathname`을 전달합니다. 주소는 반드시 `/mcp/<본인의 MCP_PATH_TOKEN>`까지 입력합니다. |
+| “앱을 만드는 데 필요한 서비스를 일시적으로 사용할 수 없습니다” | 이번 사례에서는 ChatGPT의 요청이 Worker에 도착했고, 실제 HTTP 응답은 500이었습니다. 이 문구만으로 OpenAI 장애나 계정 문제라고 판단할 수 없습니다. | MCP SDK v2에 맞게 Zod 4 입력 형식을 사용하도록 수정했습니다. |
+| “서버가 MCP 설정을 완료하지 못했습니다” | HTTP 200이어도 도구 목록 응답 안에 JSON-RPC 오류가 있었습니다. 실제 메시지는 `[toJSONSchema]: Non-representable type encountered: string`이었습니다. | Zod 3 패키지에 포함된 초기 v4 대신, 독립된 `zod: ^4.2.0`과 `zod/v4` import를 사용합니다. |
+
+Cloudflare용 코드의 주요 조합은 `@modelcontextprotocol/server: 2.4.0`, `agents: ^0.33.0`, `zod: ^4.2.0`입니다. 버전 범위가 허용하는 후속 버전까지 모두 검증한 것은 아닙니다. 의존성을 변경하면 초기화와 도구 목록 반환을 다시 확인하세요.
+
+### Cloudflare에서 실제 요청 확인하기
+
+1. Cloudflare 대시보드에서 **Workers & Pages → 본인의 Worker → Observability → Live**를 엽니다.
+2. **Begin log stream**을 누릅니다. `Listening for events...`가 표시되면 수신 준비가 된 것입니다.
+3. 해당 탭을 열어 둔 채 ChatGPT에서 연결을 시도합니다.
+4. 새 요청 행을 펼쳐 `event.response.status`, `exceptions`, `logs`를 확인합니다. 클라이언트에 따라 `initialize` 또는 `server/discover`, 이어서 `tools/list` 요청이 나타날 수 있습니다.
+5. 저장형 Observability가 꺼져 있어도 이번 사례에서는 **Live** 실시간 로그를 사용할 수 있었습니다. 이전 요청이 없다고 판단하기 전에 로그 수신이 시작됐는지 확인하세요.
+
+**로그의 `outcome: ok`는 HTTP 성공이나 MCP 연결 성공을 뜻하지 않습니다.** 실행이 예외 없이 종료되더라도 HTTP 500을 반환할 수 있습니다. 또한 HTTP 200 안에 JSON-RPC `error`가 들어 있을 수 있으므로, 상태 코드만으로 검증을 마치지 마세요.
+
+현재 Worker는 핸들러 오류를 `MCP handler error:`로 기록하고, 알고 있는 API 키와 경로 토큰은 해당 오류 메시지에서 가립니다. 다만 모든 오류가 이 콜백에 기록되는 것은 아니므로, 로그가 비어 있어도 MCP 응답 본문 확인이 필요할 수 있습니다. 로그를 공개할 때는 URL 토큰 등 민감한 값이 남아 있지 않은지 별도로 확인하세요.
+
+### 연결 성공 판단 기준
+
+- 루트 주소 `/`의 안내 문구는 서버가 실행된다는 확인일 뿐 MCP 검증이 아닙니다.
+- MCP 주소를 브라우저로 열 때 나타나는 `Method not allowed`는 GET 요청에 대한 응답입니다. 이 결과만으로 연결 성공·실패를 판단하지 않습니다.
+- MCP 초기화 또는 서버 정보 확인이 성공하고, `tools/list` 응답의 `result.tools`에 `search_dictionary`와 `get_dictionary_entry`가 오류 없이 포함되어야 합니다.
+- ChatGPT에서 플러그인을 생성한 뒤 실제 단어 검색과 상세 조회도 실행해 API 키와 사전 API 응답을 확인하세요.
+- 문제 진단 중 사용했던 임시 `/diagnostics` 경로는 검증 후 코드에서 제거했습니다. 현재 배포의 정식 기능이 아닙니다.
+
+### 기존 배포를 수정본으로 업데이트하기
+
+Fork를 사용한다면 먼저 GitHub에서 원본 저장소의 최신 `main` 변경사항을 동기화하세요. 원본 저장소가 수정돼도 다른 사용자의 Fork가 자동으로 갱신되는 것은 아닙니다.
+
+로컬에서 배포한다면 최신 코드를 받은 뒤 `npm install`과 `npm run deploy:cloudflare`를 실행합니다. Cloudflare의 Git 연동 배포라면 연결된 저장소에 변경을 반영한 후 해당 커밋의 배포가 **Ready**이고 실제로 적용됐는지 확인하세요. API 키와 경로 토큰은 기존 Secret을 유지할 수 있습니다.
 
 ### 보안과 사용량
 
