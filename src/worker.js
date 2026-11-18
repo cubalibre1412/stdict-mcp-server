@@ -129,7 +129,7 @@ function createServer(env) {
 }
 
 export default {
-  fetch(request, env, ctx) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.pathname === '/' && request.method === 'GET') {
       return new Response('표준국어대사전 MCP 서버가 실행 중입니다. MCP endpoint: /mcp/<MCP_PATH_TOKEN>', {
@@ -138,6 +138,23 @@ export default {
     }
     const pathToken = env.MCP_PATH_TOKEN?.trim();
     if (!pathToken) return new Response('MCP_PATH_TOKEN Secret is not configured', { status: 503 });
+    if (request.method === 'GET' && url.pathname === '/mcp/' + pathToken + '/diagnostics') {
+      const endpoint = new URL('/mcp/' + pathToken, url.origin);
+      const handler = createMcpHandler(() => createServer(env), { route: endpoint.pathname });
+      const results = [];
+      for (const [id, method, params] of [
+        [1, 'initialize', { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'diagnostic', version: '1' } }],
+        [2, 'tools/list', {}],
+      ]) {
+        const response = await handler(new Request(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' },
+          body: JSON.stringify({ jsonrpc: '2.0', id, method, params }),
+        }), env, ctx);
+        results.push({ method, status: response.status, body: await response.text() });
+      }
+      return Response.json(results, { headers: { 'Cache-Control': 'no-store' } });
+    }
     if (url.pathname !== '/mcp/' + pathToken) return new Response('Not found', { status: 404 });
     return createMcpHandler(() => createServer(env), {
       route: url.pathname,
