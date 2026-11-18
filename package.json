@@ -1,6 +1,6 @@
 {
   "name": "stdict-mcp-server",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": false,
   "description": "MCP server for the National Institute of Korean Language Standard Korean Dictionary Open API",
   "type": "module",
