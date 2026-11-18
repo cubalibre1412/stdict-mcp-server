@@ -1,0 +1,13 @@
+{
+  "name": "stdict-mcp-server",
+  "version": "0.1.0",
+  "private": false,
+  "description": "MCP server for the National Institute of Korean Language Standard Korean Dictionary Open API",
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "scripts": { "start": "node src/index.js" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.8"
+  }
+}
