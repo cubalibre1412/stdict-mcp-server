@@ -148,7 +148,7 @@ export default {
       ]) {
         const response = await handler(new Request(endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' },
+          headers: { Host: endpoint.hostname, 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' },
           body: JSON.stringify({ jsonrpc: '2.0', id, method, params }),
         }), env, ctx);
         results.push({ method, status: response.status, body: await response.text() });
