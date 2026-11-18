@@ -4,10 +4,10 @@
 
 ## 제공 도구
 
-- \`search_dictionary\`: 표제어·뜻풀이 검색. 일치, 포함, 시작, 끝, 와일드카드 검색과 품사 필터를 지원합니다.
-- \`get_dictionary_entry\`: 표제어나 검색 결과의 \`targetCode\`로 상세 항목을 조회합니다.
+- `search_dictionary`: 표제어·뜻풀이 검색. 일치, 포함, 시작, 끝, 와일드카드 검색과 품사 필터를 지원합니다.
+- `get_dictionary_entry`: 표제어나 검색 결과의 `targetCode`로 상세 항목을 조회합니다.
 
-동음이의어를 구분해 상세 조회하려면 검색 결과의 \`targetCode\`를 \`lookupBy: "target_code"\`와 함께 전달하세요.
+동음이의어를 구분해 상세 조회하려면 검색 결과의 `targetCode`를 `lookupBy: "target_code"`와 함께 전달하세요.
 
 ## Cloudflare Workers에 배포하기
 
@@ -24,24 +24,25 @@
 5. `wrangler.jsonc` 파일의 `name` 값을 Cloudflare에서 사용할 Worker 이름과 같게 바꿉니다. 현재 공개 저장소 값은 예시용입니다. 예를 들어 이름을 `stdict-mcp-server`로 정했다면 `wrangler.jsonc`에도 같은 값을 적습니다. 두 이름이 다르면 Cloudflare 자동 배포가 실패합니다.
 6. 아래 명령을 순서대로 실행합니다.
 
-\`\`\`bash
+```bash
 npm install
 npx wrangler login
 npx wrangler secret put KOREAN_DICT_API_KEY
+node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"
 npx wrangler secret put MCP_PATH_TOKEN
 npm run deploy:cloudflare
-\`\`\`
+```
 
-6. \`secret put\` 명령에서 API 키를 입력합니다. 입력한 값은 화면에 표시되지 않습니다. API 키를 GitHub 파일이나 코드에 적지 마세요.
-7. 배포가 완료되면 Wrangler가 표시하는 \`workers.dev\` 주소 뒤에 \`/mcp\`를 붙여 MCP 주소로 사용합니다. 예: \`https://내-worker.내계정.workers.dev/mcp\`
+7. `KOREAN_DICT_API_KEY` 입력 프롬프트에는 발급받은 API 키를 입력합니다. `MCP_PATH_TOKEN` 입력 프롬프트에는 바로 앞에서 생성한 임의 문자열을 입력합니다. 두 값은 화면에 표시되지 않으며 저장소나 코드에 적지 마세요.
+8. 배포가 완료되면 Wrangler가 표시하는 `workers.dev` 주소에 `/mcp/`와 저장한 `MCP_PATH_TOKEN` 값을 이어 붙여 MCP 주소로 사용합니다. 예: `https://내-worker.내계정.workers.dev/mcp/생성한토큰`
 
 ### ChatGPT 웹에 연결하기
 
 1. ChatGPT 웹에서 **플러그인(Plugins)** 메뉴를 엽니다.
 2. **+ → 맞춤 MCP 서버 추가(Add custom MCP server)**를 선택합니다.
-3. 서버 주소에 본인의 Cloudflare MCP 주소(\`https://...workers.dev/mcp\`)를 입력합니다.
+3. 서버 주소에 본인의 Cloudflare MCP 주소(`https://...workers.dev/mcp/생성한토큰`)를 입력합니다.
 4. 이 서버는 사전 검색·조회만 제공하므로 인증 방식은 **인증 없음(No authentication)**으로 선택합니다.
-5. 연결을 만들고 도구 목록에 \`search_dictionary\`, \`get_dictionary_entry\`가 표시되는지 확인합니다.
+5. 연결을 만들고 도구 목록에 `search_dictionary`, `get_dictionary_entry`가 표시되는지 확인합니다.
 
 ChatGPT의 맞춤 MCP 기능은 계정 및 요금제, 워크스페이스 설정에 따라 달라질 수 있습니다. OpenAI 안내 기준으로 맞춤 MCP 연결은 웹에서 제공되며 모바일에서는 연결할 수 없습니다. 최신 지원 여부는 [OpenAI 안내](https://help.openai.com/en/articles/12584461-connecting-custom-mcp-servers-in-chatgpt)를 확인하세요.
 
@@ -59,29 +60,29 @@ ChatGPT의 맞춤 MCP 기능은 계정 및 요금제, 워크스페이스 설정�
 - Node.js 18 이상
 - 표준국어대사전 Open API 인증 키
 
-\`\`\`bash
+```bash
 npm install
-\`\`\`
+```
 
 Windows PowerShell:
 
-\`\`\`powershell
+```powershell
 $env:KOREAN_DICT_API_KEY = "발급받은_인증키"
 npm start
-\`\`\`
+```
 
 macOS/Linux:
 
-\`\`\`bash
+```bash
 export KOREAN_DICT_API_KEY="발급받은_인증키"
 npm start
-\`\`\`
+```
 
-인증 키를 소스 코드나 MCP 설정 파일에 직접 적거나 GitHub에 올리지 마세요. 로컬 서버는 \`KOREAN_DICT_API_KEY\` 환경변수에서만 키를 읽습니다. \`.env\` 파일은 Git에서 제외됩니다.
+인증 키를 소스 코드나 MCP 설정 파일에 직접 적거나 GitHub에 올리지 마세요. 로컬 서버는 `KOREAN_DICT_API_KEY` 환경변수에서만 키를 읽습니다. `.env` 파일은 Git에서 제외됩니다.
 
 ## MCP 호스트 설정 예시
 
-\`\`\`json
+```json
 {
   "mcpServers": {
     "stdict": {
@@ -91,7 +92,7 @@ npm start
     }
   }
 }
-\`\`\`
+```
 
 MCP 설정 파일에 키를 저장하는 경우 해당 파일을 공개 저장소에 올리지 말고 사용자 계정만 읽을 수 있도록 관리하세요.
 
