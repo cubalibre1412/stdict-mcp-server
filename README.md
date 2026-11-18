@@ -11,7 +11,7 @@
 
 ## Cloudflare Workers에 배포하기
 
-배포하면 PC가 꺼져 있어도 HTTPS 주소로 MCP 서버에 접속할 수 있습니다. 무료 Cloudflare 계정에서 시작할 수 있습니다. Cloudflare Workers 무료 요금제는 현재 하루 100,000회 요청 한도가 있습니다. 사용량과 요금제 조건은 Cloudflare 안내를 확인하세요.
+배포하면 PC가 꺼져 있어도 HTTPS 주소로 MCP 서버에 접속할 수 있습니다. 저장소의 `main` 브랜치에 변경사항을 올릴 때마다 Cloudflare가 자동으로 다시 배포합니다. 무료 Cloudflare 계정에서 시작할 수 있습니다. Cloudflare Workers 무료 요금제는 현재 하루 100,000회 요청 한도가 있습니다. 사용량과 요금제 조건은 Cloudflare 안내를 확인하세요.
 
 ### 각자 배포하는 방법
 
